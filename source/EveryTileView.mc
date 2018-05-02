@@ -127,12 +127,18 @@ class EveryTileView extends Ui.DataField {
     // guarantee that compute() will be called before onUpdate().
     function compute(info)
     {
-       if( (info != null) && (info.currentLocation != null))
+       if( info != null)
+       {
+       if (info.currentHeading != null)
+       {
+          heading = info.currentHeading;
+       }
+
+       if (info.currentLocation != null)
        {
           var ddgr = info.currentLocation.toDegrees();
           var dgr = [ddgr[0].toFloat(), ddgr[1].toFloat()];
           var i= 0;
-          heading = info.currentHeading;
           if(!initialized)
           {
              lp = 0;
@@ -185,6 +191,7 @@ class EveryTileView extends Ui.DataField {
                 mp.save();
              }
           }
+       }
        }
     }
 
