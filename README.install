@@ -1,0 +1,10 @@
+This software is a DataField for a Garmin Edge520, Edge520Plus or Edge820 cycling computer.
+To run the datafield:
+
+1) download and unpack the Garmin IQ sdk in version 2.4 or higher from
+   https://developer.garmin.com/connect-iq/sdk/
+2) Use the monkeyc compiler to build the sources into a PRG file suitable for your device
+3) Connect your device via USB, copy the *.PRG file to /Garmin/APPS/
+4) Start yor Edge device, go to menu->settings->activity-profiles, choose a 
+   profile, go to Data-Screens, edit or add a screen with a 1-Datafield layout.
+   Choose for field-1 the connect-IQ app EveryTile.

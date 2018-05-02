@@ -1,3 +1,9 @@
 <strings>
     <string id="AppName">EveryTile</string>
+    <string id="homeLongitudeTitle">Home Longitude</string>
+    <string id="homeLongitudePrompt">Enter your home longitude</string>
+    <string id="homeLongitudeError">Wrong longitude value</string>
+    <string id="homeLatitudeTitle">Home Latitude</string>
+    <string id="homeLatitudePrompt">Enter your home latitude</string>
+    <string id="homeLatitudeError">Wrong latitude value</string>
 </strings>

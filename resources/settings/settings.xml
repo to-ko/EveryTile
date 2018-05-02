@@ -1,0 +1,9 @@
+<settings>
+    <setting propertyKey="@Properties.homeLongitude" title="@Strings.homeLongitudeTitle" prompt="@Strings.homeLongitudePrompt">
+        <settingConfig type="numeric" errorMessage="@Strings.homeLongitudeError" />
+    </setting>
+
+    <setting propertyKey="@Properties.homeLatitude" title="@Strings.homeLatitudeTitle" prompt="@Strings.homeLatitudePrompt">
+        <settingConfig type="numeric" errorMessage="@Strings.homeLatitudeError" />
+    </setting>
+</settings>
