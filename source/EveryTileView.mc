@@ -19,18 +19,12 @@ using Toybox.Activity as Act;
 using Toybox.Application.Storage;
 
 class EveryTileView extends Ui.DataField {
-
-    const Pmax =  50; // pixels of track to store exactly
-    const cPmax= 200; // tiles of track to store
-
     hidden var tileW = 50;
     hidden var tileH = 50;
     hidden var initialized = false;
 
-    hidden var lp = 0;       // counter for the path
-    hidden var clp= 0;       // counter for cpath;
-    hidden var path = new[Pmax*2];
-    hidden var cpath= new[cPmax*2];
+    hidden var pt;          // fine path
+    hidden var cpt;         // coarse path
 
     hidden var tx = new[6]; // coordinates of tiles on the screen
     hidden var ty = new[6];
@@ -67,38 +61,26 @@ class EveryTileView extends Ui.DataField {
     {
        DataField.initialize();
        mp = new map();
+       pt = new path(50,mp.hlon,mp.hlat);
+       cpt= new path(200,mp.hlon,mp.hlat);
 
-       lp = 0;
-       path[0] = mp.hlon;
-       path[1] = mp.hlat;
-       clp=0;
-       cpath[0] = mp.hlon;
-       cpath[1] = mp.hlat;
        initialized=false;
 
        var inf = Act.getActivityInfo();
        if( (inf!=null) && (inf.elapsedTime > 10000) )
        {
           // attempt to continue activity
-          cpath=Storage.getValue("cpath");
-          clp=Storage.getValue("clp");
           mp.newTiles=Storage.getValue("newTiles");
           mp.newTilesR=Storage.getValue("newTilesR");
-          if((clp!=null) && (cpath!=null) && (mp.newTiles)!=null || ( mp.newTilesR!=null ))
+          if( cpt.load() && (mp.newTiles!=null) && (mp.newTilesR!=null) )
           {
-             lp = 0;
-             path[0] = cpath[2*clp];
-             path[1] = cpath[2*clp+1];
-             mp.setMap(path[0],path[1]);
+             pt.set(0,cpt.getDeg(null));
+             mp.setMap(pt.p[0],pt.p[1]);
              initialized = true;
           }else
           {
              mp.newTiles = 0;
              mp.newTilesR = 0;
-             cpath = new[cPmax*2];
-             cpath[0] = mp.hlon;
-             cpath[1] = mp.hlat;
-             clp=0;
           }
        }
     }
@@ -111,10 +93,10 @@ class EveryTileView extends Ui.DataField {
        dx = dc.getWidth();
        dy = dc.getHeight();
 
-       tx = [0, dx/8, 3*dx/8, 5*dx/8, dx-dx/8, dx+1];
-       ty = [40, 40+dx/8, 40+3*dx/8, 40+5*dx/8, 40+7*dx/8, dy+1];
-       tileW = dx/4;
-       tileH = dx/4;
+       tx = [0, dx>>3, 3*dx>>3, 5*dx>>3, dx-dx>>3, dx+1];
+       ty = [40, 40+dx>>3, 40+3*dx>>3, 40+5*dx>>3, 40+7*dx>>3, dy+1];
+       tileW = dx>>2;
+       tileH = dx>>2;
 
        return true;
     }
@@ -133,6 +115,11 @@ class EveryTileView extends Ui.DataField {
        {
           heading = info.currentHeading;
        }
+       if (info.elapsedTime < 100)
+       {
+          //case when new activity was started, but the old view is still alive
+          initialized=false;
+       }
 
        if (info.currentLocation != null)
        {
@@ -141,53 +128,25 @@ class EveryTileView extends Ui.DataField {
           var i= 0;
           if(!initialized)
           {
-             lp = 0;
-             path[0] = dgr[1];
-             path[1] = dgr[0];
-             clp = 0;
-             cpath[0] = dgr[1];
-             cpath[1] = dgr[0];
+             pt.set(0,dgr);
+             cpt.set(0,dgr);
+             mp.newTiles = 0;
+             mp.newTilesR= 0;
              initialized=true;
              mp.setMap(dgr[1],dgr[0]);
-             mp.setTiles(cpath,clp);
+             mp.setTiles(cpt.p,cpt.l);
           }else
           {
-             if( pxdist(dgr,[path[2*lp+1],path[2*lp]]) )
+             if( pxdist(dgr,pt.getDeg(null)) )
              {
-                //add new pixel to path
-                lp = lp+1;
-                if (lp==Pmax)
-                {
-                   // path to long for memory, throw away oldest half
-                   for (i=0; i<Pmax; i++)
-                   {
-                      path[i] = path[i+Pmax];
-                   }
-                   lp = Pmax/2;
-                }
-                path[2*lp]   = dgr[1];
-                path[2*lp+1] = dgr[0];
+                pt.add(dgr);
              }
              if( mp.setMap(dgr[1],dgr[0]) )
              {
-                clp++;
-                if (clp==cPmax)
-                {
-                   // path to long for memory, throw away oldest half, tilesR may become inaccurate
-                   for (i=0; i<cPmax; i++)
-                   {
-                      cpath[i] = cpath[i+cPmax];
-                   }
-                   clp = cPmax/2;
-                }
-                cpath[2*clp]   = dgr[1];
-                cpath[2*clp+1] = dgr[0];
-                path[0] = dgr[1];
-                path[1] = dgr[0];
-                lp=0;
-                mp.setTiles(cpath,clp);
-                Storage.setValue("cpath",cpath);
-                Storage.setValue("clp",clp);
+                cpt.add(dgr);
+                pt.set(0,dgr);
+                mp.setTiles(cpt.p,cpt.l);
+                cpt.save();
                 mp.save();
              }
           }
@@ -196,37 +155,32 @@ class EveryTileView extends Ui.DataField {
     }
 
 
+    function fgbgCol(dc, col1, col2)
+    {
+       if(getBackgroundColor()==Gfx.COLOR_BLACK)
+       {
+          dc.setColor(col1,Gfx.COLOR_BLACK);
+       }else
+       {
+          dc.setColor(col2,Gfx.COLOR_WHITE);
+       }
+    }
 
 
     function setCol(dc,v)
     {
-       if(getBackgroundColor()==Gfx.COLOR_BLACK)
-       {
-          switch(v){
-             case 0:
-                dc.setColor(Gfx.COLOR_DK_RED, Gfx.COLOR_DK_RED);
-                break;
-             case 1:
-                dc.setColor(Gfx.COLOR_DK_GREEN, Gfx.COLOR_DK_GREEN);
-                break;
-             case 2:
-                dc.setColor(Gfx.COLOR_GREEN, Gfx.COLOR_GREEN);
-                break;
-          }
-       }else
-       {
-          switch(v){
-             case 0:
-                dc.setColor(Gfx.COLOR_DK_RED, Gfx.COLOR_DK_RED);
-                break;
-             case 1:
-                dc.setColor(Gfx.COLOR_DK_GREEN, Gfx.COLOR_DK_GREEN);
-                break;
-             case 2:
-                dc.setColor(Gfx.COLOR_GREEN, Gfx.COLOR_GREEN);
-                break;
-          }
-       }
+      if(v==0)
+      {
+         dc.setColor(Gfx.COLOR_DK_RED, Gfx.COLOR_DK_RED);
+      }
+      if(v==1)
+      {
+         dc.setColor(Gfx.COLOR_DK_GREEN, Gfx.COLOR_DK_GREEN);
+      }
+      if(v==2)
+      {
+         dc.setColor(Gfx.COLOR_GREEN, Gfx.COLOR_GREEN);
+      }
     }
 
 
@@ -242,21 +196,9 @@ class EveryTileView extends Ui.DataField {
        var x4= Math.round( c*( 6) +s*(20.0)).toNumber() + x;
        var y4= Math.round(-s*( 6) +c*(20.0)).toNumber() + y;
 
-       if(getBackgroundColor() == Gfx.COLOR_BLACK)
-       {
-          dc.setColor(Gfx.COLOR_DK_BLUE, Gfx.COLOR_BLACK);
-       }else
-       {
-          dc.setColor(Gfx.COLOR_BLUE,Gfx.COLOR_WHITE);
-       }
+       fgbgCol(dc,Gfx.COLOR_DK_BLUE,Gfx.COLOR_BLUE);
        dc.fillPolygon([[x,y],[x2,y2],[x3,y3],[x4,y4],[x,y]]);
-       if(getBackgroundColor() == Gfx.COLOR_BLACK)
-       {
-          dc.setColor(Gfx.COLOR_BLUE, Gfx.COLOR_BLACK);
-       }else
-       {
-          dc.setColor(Gfx.COLOR_DK_BLUE,Gfx.COLOR_WHITE);
-       }
+       fgbgCol(dc,Gfx.COLOR_BLUE,Gfx.COLOR_DK_BLUE);
        dc.drawLine(x,y,x2,y2);
        dc.drawLine(x2,y2,x3,y3);
        dc.drawLine(x3,y3,x4,y4);
@@ -267,27 +209,24 @@ class EveryTileView extends Ui.DataField {
     // Display the value you computed here. This will be called
     // once a second when the data field is visible.
     function onUpdate(dc) {
-
-        if(getBackgroundColor() == Gfx.COLOR_BLACK)
-        {
-           dc.setColor(Gfx.COLOR_WHITE, Gfx.COLOR_BLACK);
-        }else
-        {
-           dc.setColor(Gfx.COLOR_BLACK,Gfx.COLOR_WHITE);
-        }
+        fgbgCol(dc,Gfx.COLOR_WHITE,Gfx.COLOR_BLACK);
 
         //this data field works only in 1-datafield layout
         if((dx>=200) & (dy>=265))
         {
-           var mx = dx/2;
-           var my = dy/2;
+           var mx = dx>>1;
+           var my = dy>>1;
            var lx=0;
            var ly=0;
+           var i=0;
+
 
            // header line
            dc.setClip(tx[0],0,dx,ty[0]);
-           var str = mp.newTiles.format("%i")+","+mp.newTilesR.format("%i")+",["+(mp.loni-mp.hloni).format("%i")+"/"+(mp.lati-mp.hlati).format("%i")+"]";
-           dc.drawText(mx, ty[0]/4, Gfx.FONT_MEDIUM, str, Gfx.TEXT_JUSTIFY_CENTER);
+
+           dc.drawText(mx, ty[0]/4, Gfx.FONT_MEDIUM,
+              mp.newTiles.format("%i")+","+mp.newTilesR.format("%i")+",["+(mp.loni-mp.hloni).format("%i")+"/"+(mp.lati-mp.hlati).format("%i")+"]",
+              Gfx.TEXT_JUSTIFY_CENTER);
 
            dc.setClip(tx[0],ty[0],dx,dy-ty[0]);
            // draw 5x5 tiles
@@ -303,25 +242,15 @@ class EveryTileView extends Ui.DataField {
            var px = deg2px([mp.clat,mp.clon]);
            plotArrow(dc,px[0]+tx[2],px[1]+ty[2]);
 
-
-
            // fine grained path
            dc.setPenWidth(2);
-           if(getBackgroundColor() == Gfx.COLOR_BLACK)
-           {
-              dc.setColor(Gfx.COLOR_WHITE, Gfx.COLOR_BLACK);
-           }else
-           {
-              dc.setColor(Gfx.COLOR_BLACK,Gfx.COLOR_WHITE);
-           }
-
-           var i;
+           fgbgCol(dc,Gfx.COLOR_LT_GRAY,Gfx.COLOR_BLACK);
 
            lx=px[0];
            ly=px[1];
-           for(i=lp-1; i>=0; i--)
+           for(i=pt.l-1; i>=0; i--)
            {
-              px = deg2px([path[2*i+1],path[2*i]]);
+              px = deg2px(pt.getDeg(i));
               dc.drawLine(lx+tx[2],ly+ty[2],px[0]+tx[2],px[1]+ty[2]);
               lx=px[0];
               ly=px[1];
@@ -329,17 +258,11 @@ class EveryTileView extends Ui.DataField {
 
 
            // coarse grained path
-           if(getBackgroundColor() == Gfx.COLOR_BLACK)
-           {
-              dc.setColor(Gfx.COLOR_LT_GRAY, Gfx.COLOR_BLACK);
-           }else
-           {
-              dc.setColor(Gfx.COLOR_DK_GRAY,Gfx.COLOR_WHITE);
-           }
+           fgbgCol(dc,Gfx.COLOR_DK_GRAY,Gfx.COLOR_DK_GRAY);
 
-           for(i=clp; i>=0; i--)
+           for(i=cpt.l; i>=0; i--)
            {
-              px = deg2px([cpath[2*i+1],cpath[2*i]]);
+              px = deg2px(cpt.getDeg(i));
               dc.drawLine(lx+tx[2],ly+ty[2],px[0]+tx[2],px[1]+ty[2]);
               lx=px[0];
               ly=px[1];

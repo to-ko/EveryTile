@@ -16,9 +16,9 @@ using Toybox.Application.Storage;
 using Toybox.Application.Properties;
 
 class map{
-   var bigMap = new[4*124]; // compressed map of tiles. 124 rows x 124 columns.
-                            // Each value stores 31 bits, 1=visited, 0=unvisited tile
-                            // only positive integers are used
+   var bigMap; // compressed map of tiles. 124 rows x 124 columns.
+               // Each value stores 31 bits, 1=visited, 0=unvisited tile
+               // only positive integers are used
    var ltiles = [ [0,0,0,0,0], [0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]];
 
    var hlat;     // home latitude
@@ -35,7 +35,7 @@ class map{
 
    function lat2lati(lat)
    {
-      return ((1.0 - Math.ln(Math.tan(lat*0.0174532925199433d) + (1.0 / Math.cos(lat*0.0174532925199433d))) * 0.318309886183791d) *8192).toNumber();
+      return (8192.0 - Math.ln(Math.tan(lat*0.0174532925199433d) + (1.0 / Math.cos(lat*0.0174532925199433d))) * 2607.59458761762d).toNumber();
    }
 
 
@@ -47,21 +47,19 @@ class map{
 
    function bigmap2lmap(xi,yi)
     {
-       var i;
-       var j;
-       for(i=0; i<5; i++)
+       var x;
+       var y;
+       for(x=xi-hloni+59; x<xi-hloni+64; x++)
        {
-          for(j=0; j<5; j++)
+          for(y=yi-hlati+59; y<yi-hlati+64; y++)
           {
-             var x = xi-hloni+i-2;
-             var y = yi-hlati+j-2;
-             if ( (x < -61) || (x>62) || (y<-61) || (y>62) )
+             if ( (x < 0) || (x>123) || (y<0) || (y>123) )
              {
                 //too far out for permanent storage
-                ltiles[i][j] = 0;
+                ltiles[x-xi+hloni-59][y-yi+hlati-59] = 0;
              }else
              {
-                ltiles[i][j] = (bigMap[(y+61)*4+((x+61)/31)] & (1<<((x+61)%31))) >> ((x+61)%31);
+                ltiles[x-xi+hloni-59][y-yi+hlati-59] = (bigMap[y*4+x/31] & (1<<(x%31))) >> (x%31);
              }
           }
        }
@@ -71,14 +69,11 @@ class map{
 
     function setBigMap(xi,yi)
     {
-       xi -= hloni;
-       yi -= hlati;
-       if ( (xi < -61) || (xi>62) || (yi<-61) || (yi>62) )
+       xi += (61-hloni);
+       yi += (61-hlati);
+       if ( (xi>=0) && (xi<124) && (yi>=0) && (yi<124) )
        {
-          //too far out for permanent storage
-       }else
-       {
-          bigMap[(yi+61)*4+((xi+61)/31)] |= (1<<((xi+61)%31));
+          bigMap[yi*4+xi/31] |= (1<<(xi%31));
        }
     }
 
@@ -135,11 +130,11 @@ class map{
    {
        hlat = Properties.getValue("homeLatitude");
        hlon = Properties.getValue("homeLongitude");
-       if ((hlat==null) || (hlon==null))
+       /*if ((hlat==null) || (hlon==null))
        {
           hlat = 52.3763461;
           hlon =  4.8973255;
-       }
+       }*/
        clat = hlat;
        clon = hlon;
        hlati = lat2lati(hlat);
@@ -149,12 +144,8 @@ class map{
        newTiles=0;
        newTilesR=0;
 
-       var hasDat = Storage.getValue("hasDat");
-       if(hasDat != null)
-       {
-          bigMap = Storage.getValue("bigMap");
-       }
-       else
+       bigMap = Storage.getValue("bigMap");
+       if(bigMap==null )
        {
           bigMap = WatchUi.loadResource(Rez.JsonData.jsonBmap);
        }
@@ -166,7 +157,6 @@ class map{
       Storage.setValue("bigMap",bigMap);
       Storage.setValue("newTiles",newTiles);
       Storage.setValue("newTilesR",newTilesR);
-      Storage.setValue("hasDat",true);
    }
 
 }
