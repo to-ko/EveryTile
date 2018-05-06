@@ -112,6 +112,10 @@ class EveryTileView extends Ui.DataField {
        if( info != null)
        {
           heading = info.currentHeading;
+          if(heading==null)
+          {
+             heading = 0.0;
+          }
           if (info.elapsedTime < 100)
           {
              //case when new activity was started, but the old view is still alive

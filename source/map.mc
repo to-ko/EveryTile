@@ -59,7 +59,7 @@ class map{
                 ltiles[5*(y-yi+hlati-59) + x-xi+hloni-59] = 0;
              }else
              {
-                ltiles[5*(y-yi+hlati-59)+x-xi+hloni-59] = (bigMap[y*4+x/31] & (1<<(x%31))) >> (x%31);
+                ltiles[5*(y-yi+hlati-59) + x-xi+hloni-59] = (bigMap[y*4+x/31] & (1<<(x%31))) >> (x%31);
              }
           }
        }
