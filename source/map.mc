@@ -25,8 +25,8 @@ class map{
    var hlon;     // home longitude
    var hlati=0;  // home tile y
    var hloni=0;  // home tile x
-   var loni=0;   // current tile x
-   var lati=0;   // current tile y
+   var loni;     // current tile x
+   var lati;     // current tile y
    var clon;     // current position x
    var clat;     // current position y
    var newTiles = 0;  // tiles visited for the first time
@@ -122,7 +122,7 @@ class map{
          newTilesR++;
          newTiles++;
       }
-      ltiles[2][2] = 2;
+      ltiles[2][2]=2;
    }
 
 
@@ -130,25 +130,22 @@ class map{
    {
        hlat = Properties.getValue("homeLatitude");
        hlon = Properties.getValue("homeLongitude");
-       /*if ((hlat==null) || (hlon==null))
+
+       bigMap = Storage.getValue("bigMap");
+       if((bigMap==null) || (hlat!=Storage.getValue("hlat")) || (hlon!=Storage.getValue("hlon")) )
        {
-          hlat = 52.3763461;
-          hlon =  4.8973255;
-       }*/
-       clat = hlat;
-       clon = hlon;
+          bigMap = WatchUi.loadResource(Rez.JsonData.jsonBmap);
+          Storage.setValue("hlat",hlat);
+          Storage.setValue("hlon",hlon);
+       }
        hlati = lat2lati(hlat);
        hloni = lon2loni(hlon);
+       clat = hlat;
+       clon = hlon;
        loni=hloni;
        lati=hlati;
        newTiles=0;
        newTilesR=0;
-
-       bigMap = Storage.getValue("bigMap");
-       if(bigMap==null )
-       {
-          bigMap = WatchUi.loadResource(Rez.JsonData.jsonBmap);
-       }
        bigmap2lmap(hloni,hlati);
    }
 

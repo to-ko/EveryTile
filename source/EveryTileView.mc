@@ -111,32 +111,30 @@ class EveryTileView extends Ui.DataField {
     {
        if( info != null)
        {
-       if (info.currentHeading != null)
-       {
           heading = info.currentHeading;
-       }
-       if (info.elapsedTime < 100)
-       {
-          //case when new activity was started, but the old view is still alive
-          initialized=false;
-       }
+          if (info.elapsedTime < 100)
+          {
+             //case when new activity was started, but the old view is still alive
+             initialized=false;
+             return;
+          }
 
-       if (info.currentLocation != null)
-       {
-          var ddgr = info.currentLocation.toDegrees();
-          var dgr = [ddgr[0].toFloat(), ddgr[1].toFloat()];
-          var i= 0;
-          if(!initialized)
+          if (info.currentLocation != null)
           {
-             pt.set(0,dgr);
-             cpt.set(0,dgr);
-             mp.newTiles = 0;
-             mp.newTilesR= 0;
-             initialized=true;
-             mp.setMap(dgr[1],dgr[0]);
-             mp.setTiles(cpt.p,cpt.l);
-          }else
-          {
+             var ddgr = info.currentLocation.toDegrees();
+             var dgr = [ddgr[0].toFloat(), ddgr[1].toFloat()];
+             var i= 0;
+             if(!initialized)
+             {
+                pt.set(0,dgr);
+                //cpt.set(0,dgr);
+                cpt.l=-1;
+                mp.newTiles = 0;
+                mp.newTilesR= 0;
+                initialized=true;
+                mp.loni = 16385; // to force a map update
+             }
+
              if( pxdist(dgr,pt.getDeg(null)) )
              {
                 pt.add(dgr);
@@ -150,7 +148,6 @@ class EveryTileView extends Ui.DataField {
                 mp.save();
              }
           }
-       }
        }
     }
 
