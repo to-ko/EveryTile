@@ -1,9 +1,9 @@
 <settings>
     <setting propertyKey="@Properties.homeLongitude" title="@Strings.homeLongitudeTitle" prompt="@Strings.homeLongitudePrompt">
-        <settingConfig type="numeric" errorMessage="@Strings.homeLongitudeError" required="true"/>
+        <settingConfig type="numeric" errorMessage="@Strings.homeLongitudeError" required="true" min="-180" max="180"/>
     </setting>
 
     <setting propertyKey="@Properties.homeLatitude" title="@Strings.homeLatitudeTitle" prompt="@Strings.homeLatitudePrompt">
-        <settingConfig type="numeric" errorMessage="@Strings.homeLatitudeError" required="true"/>
+        <settingConfig type="numeric" errorMessage="@Strings.homeLatitudeError" required="true" min="-90" max="90"/>
     </setting>
 </settings>

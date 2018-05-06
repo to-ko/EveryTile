@@ -101,13 +101,15 @@ class map{
    function setTiles(cpath,clp)
    {
       var i;
-      var ll;
+      var lx;
+      var ly;
       for (i=0;i<clp;i++)
       {
-         ll = 5*(lat2lati(cpath[2*i+1]) - lati + 2) + lon2loni(cpath[2*i])   - loni + 2;
-         if( (ll>=0) && (ll<25))
+         lx = lon2loni(cpath[2*i])   - loni + 2;
+         ly = lat2lati(cpath[2*i+1]) - lati + 2;
+         if( (lx>=0) && (lx<5) && (ly>=0) && (ly<5))
          {
-            ltiles[ll]=2;
+            ltiles[lx+ly*5]=2;
          }
       }
 

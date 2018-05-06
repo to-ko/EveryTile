@@ -1,5 +1,5 @@
 <properties>
-    <property id="appVersion" type="string">1.0.3</property>
+    <property id="appVersion" type="string">1.0.4</property>
     <property id="homeLongitude" type="float">7.150607</property>
     <property id="homeLatitude" type="float">51.267202</property>
 </properties>
