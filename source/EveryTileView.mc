@@ -231,7 +231,7 @@ class EveryTileView extends Ui.DataField {
            {
               for(lx=0;lx<5;lx++)
               {
-                 setCol(dc,mp.ltiles[lx][ly]);
+                 setCol(dc,mp.ltiles[lx+5*ly]);
                  dc.fillRectangle(tx[lx], ty[ly], tx[lx+1]-tx[lx]-1, ty[ly+1]-ty[ly]-1);
               }
            }

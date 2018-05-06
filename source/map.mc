@@ -19,7 +19,7 @@ class map{
    var bigMap; // compressed map of tiles. 124 rows x 124 columns.
                // Each value stores 31 bits, 1=visited, 0=unvisited tile
                // only positive integers are used
-   var ltiles = [ [0,0,0,0,0], [0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]];
+   var ltiles = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 
    var hlat;     // home latitude
    var hlon;     // home longitude
@@ -56,10 +56,10 @@ class map{
              if ( (x < 0) || (x>123) || (y<0) || (y>123) )
              {
                 //too far out for permanent storage
-                ltiles[x-xi+hloni-59][y-yi+hlati-59] = 0;
+                ltiles[5*(y-yi+hlati-59) + x-xi+hloni-59] = 0;
              }else
              {
-                ltiles[x-xi+hloni-59][y-yi+hlati-59] = (bigMap[y*4+x/31] & (1<<(x%31))) >> (x%31);
+                ltiles[5*(y-yi+hlati-59)+x-xi+hloni-59] = (bigMap[y*4+x/31] & (1<<(x%31))) >> (x%31);
              }
           }
        }
@@ -101,28 +101,26 @@ class map{
    function setTiles(cpath,clp)
    {
       var i;
-      var lxi;
-      var lyi;
+      var ll;
       for (i=0;i<clp;i++)
       {
-         lxi = lon2loni(cpath[2*i])   - loni + 2;
-         lyi = lat2lati(cpath[2*i+1]) - lati + 2;
-         if( (lxi>=0) && (lxi<5) && (lyi>=0) && (lyi<5) )
+         ll = 5*(lat2lati(cpath[2*i+1]) - lati + 2) + lon2loni(cpath[2*i])   - loni + 2;
+         if( (ll>=0) && (ll<25))
          {
-            ltiles[lxi][lyi]=2;
+            ltiles[ll]=2;
          }
       }
 
-      if (ltiles[2][2]==1)
+      if (ltiles[12]==1)
       {
          newTilesR++;
       }
-      if (ltiles[2][2]==0)
+      if (ltiles[12]==0)
       {
          newTilesR++;
          newTiles++;
       }
-      ltiles[2][2]=2;
+      ltiles[12]=2;
    }
 
 
