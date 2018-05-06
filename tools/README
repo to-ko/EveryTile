@@ -1,0 +1,20 @@
+Importing missing tiles from VeloViewer into EveryTile
+------------------------------------------------------
+
+You will need: sed and octave/matlab, both available for every linux distro
+
+1) Get the KML file with yur missing tiles from your summary page on veloviewer.com,
+   save as explorer2.kml 
+
+2) run 
+   sed "s#[^ ]\+ [^ ]\+ [^ ]\+ [^ <]\+</coordinates>#\n#g" explorer2.kml |sed "s/.*<coordinates>//" | sed "s/,/ /" | sed "s#</LineString>.*##">tiles.txt
+
+   this collects the relevant data from explorer2.kml in a simple ascii file tiles.txt
+
+3) Start octave (or matlab) and run 
+   > tiles
+
+   This creates (or overwrites!) a bmap.json file in your project's resources/jsonData folder
+
+4) recompile your project. Copy bin/EveryTile.prg to your device into /Garmin/Apps/ and remove
+   /Garmin/Apps/DAT/EveryTile.*
