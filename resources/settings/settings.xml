@@ -6,4 +6,8 @@
     <setting propertyKey="@Properties.homeLatitude" title="@Strings.homeLatitudeTitle" prompt="@Strings.homeLatitudePrompt">
         <settingConfig type="numeric" errorMessage="@Strings.homeLatitudeError" required="true" min="-90" max="90"/>
     </setting>
+    
+    <setting propertyKey="@Properties.bmapstr" title="@Strings.bmapstrTitle" prompt="@Strings.bmapstrPrompt">
+        <settingConfig type="alphaNumeric" errorMessage="@Strings.bmapstrError" required="true"/>
+    </setting>
 </settings>

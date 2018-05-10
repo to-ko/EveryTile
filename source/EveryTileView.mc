@@ -37,16 +37,16 @@ class EveryTileView extends Ui.DataField {
     function deg2px(dgr)
     {
        var px = [0, 0];
-       px[0] = Math.floor((((dgr[1] + 180.0d) * 45.5111111111111d)-mp.loni) * tileW).toNumber();
-       px[1] = Math.floor(((1.0 - Math.ln(Math.tan(dgr[0]*0.0174532925199433d) + (1.0 / Math.cos(dgr[0]*0.0174532925199433d))) * 0.318309886183791d) *8192-mp.lati)*tileH).toNumber();
+       px[0] = Math.floor((((dgr[1] + 180.0) * 45.5111111111111)-mp.loni) * tileW).toNumber();
+       px[1] = Math.floor(((1.0 - Math.ln(Math.tan(dgr[0]*0.0174532925199433) + (1.0 / Math.cos(dgr[0]*0.0174532925199433))) * 0.318309886183791) *8192-mp.lati)*tileH).toNumber();
        return px;
     }
 
     function pxdist(dgr1,dgr2)
     {
-       if (  (   ((dgr1[1]-dgr2[1]) * 45.5111111111111d * tileW ).abs().toNumber()>1 ) ||
-             (   ( (- Math.ln(Math.tan(dgr1[0]*0.0174532925199433d) + (1.0 / Math.cos(dgr1[0]*0.0174532925199433d)))
-                    + Math.ln(Math.tan(dgr2[0]*0.0174532925199433d) + (1.0 / Math.cos(dgr2[0]*0.0174532925199433d))) ) * 0.318309886183791d *8192*tileH
+       if (  (   ((dgr1[1]-dgr2[1]) * 45.5111111111111 * tileW ).abs().toNumber()>1 ) ||
+             (   ( (- Math.ln(Math.tan(dgr1[0]*0.0174532925199433) + (1.0 / Math.cos(dgr1[0]*0.0174532925199433)))
+                    + Math.ln(Math.tan(dgr2[0]*0.0174532925199433) + (1.0 / Math.cos(dgr2[0]*0.0174532925199433))) ) * 0.318309886183791 *8192*tileH
                  ).abs().toNumber()>1))
        {
           return true;
@@ -90,6 +90,7 @@ class EveryTileView extends Ui.DataField {
     // the draw context is changed this will be called.
     function onLayout(dc)
     {
+       /*
        dx = dc.getWidth();
        dy = dc.getHeight();
 
@@ -97,6 +98,14 @@ class EveryTileView extends Ui.DataField {
        ty = [40, 40+dx>>3, 40+3*dx>>3, 40+5*dx>>3, 40+7*dx>>3, dy+1];
        tileW = dx>>2;
        tileH = dx>>2;
+       */
+       // hard coded for devices with 200x265
+       dx=200;
+       dy=dc.getHeight();
+       tx=[ 0, 25,  75, 125, 175, 201];
+       ty=[40, 65, 115, 165, 215, 266];
+       tileW=50;
+       tileH=50;
 
        return true;
     }
@@ -146,14 +155,20 @@ class EveryTileView extends Ui.DataField {
              if( mp.setMap(dgr[1],dgr[0]) )
              {
                 cpt.add(dgr);
-                pt.set(0,dgr);
                 mp.setTiles(cpt.p,cpt.l);
                 cpt.save();
+                //Storage.setValue eats mem like crazy, free some up before saving...
+                //cpt.p = null;
+                pt.p = null;
                 mp.save();
+                //cpt.load();
+                pt.p = new[100];
+                pt.set(0,dgr);
              }
           }
        }
     }
+
 
 
     function fgbgCol(dc, col1, col2)
@@ -271,7 +286,8 @@ class EveryTileView extends Ui.DataField {
            dc.setPenWidth(1);
          }else
          {
-            dc.drawText(dc.getWidth()/2,5,Gfx.FONT_MEDIUM,"needs whole disp.",Gfx.TEXT_JUSTIFY_CENTER);
+            dc.setClip(0,0,200,265);
+            dc.drawText(dx/2,5,Gfx.FONT_MEDIUM,Ui.loadResource(Rez.Strings.wholeDisp),Gfx.TEXT_JUSTIFY_CENTER);
          }
 
     }
