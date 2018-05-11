@@ -133,8 +133,8 @@ class map{
        var vec;
        hlat = Properties.getValue("homeLatitude");
        hlon = Properties.getValue("homeLongitude");
-
        bigMap = Storage.getValue("bigMap");
+
        if((bigMap==null) || (hlat!=Storage.getValue("hlat")) || (hlon!=Storage.getValue("hlon")) )
        {
           bigMap = new[496];
@@ -208,10 +208,13 @@ class map{
                                +(vec[20] & 0x08)<<27;
              }
           }
+
           Storage.setValue("hlat",hlat);
           Storage.setValue("hlon",hlon);
           Properties.setValue("bmapstr",""); // not used anymore, might as well delete it
+          Storage.setValue("bigMap",bigMap);
        }
+
        hlati = lat2lati(hlat);
        hloni = lon2loni(hlon);
        clat = hlat;

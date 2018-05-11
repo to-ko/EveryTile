@@ -6,4 +6,10 @@
     <string id="homeLatitudeTitle">Home Latitude</string>
     <string id="homeLatitudePrompt">Enter your home latitude</string>
     <string id="homeLatitudeError">Wrong latitude value</string>
+    
+    <string id="bmapstrTitle">Map string</string>
+    <string id="bmapstrPrompt">paste the map string here</string>
+    <string id="bmapstrError">bad map string</string>
+    
+    <string id="wholeDisp">needs whole disp.</string>
 </strings>

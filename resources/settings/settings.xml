@@ -8,6 +8,6 @@
     </setting>
     
     <setting propertyKey="@Properties.bmapstr" title="@Strings.bmapstrTitle" prompt="@Strings.bmapstrPrompt">
-        <settingConfig type="alphaNumeric" errorMessage="@Strings.bmapstrError" required="true"/>
+        <settingConfig type="alphaNumeric" errorMessage="@Strings.bmapstrError" required="true" maxLength="2604"/>
     </setting>
 </settings>
