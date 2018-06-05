@@ -1,1 +1,4 @@
 project.manifest = manifest.xml
+rectangle-200x265.excludeAnnotations = ed1000;ed1030
+rectangle-240x400.excludeAnnotations = ed520;ed1030
+rectangle-282x470.excludeAnnotations = ed520;ed1000

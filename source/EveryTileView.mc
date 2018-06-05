@@ -86,21 +86,11 @@ class EveryTileView extends Ui.DataField {
     }
 
 
-    // Set your layout here. Anytime the size of obscurity of
-    // the draw context is changed this will be called.
+    (:ed520)
     function onLayout(dc)
     {
-       /*
-       dx = dc.getWidth();
-       dy = dc.getHeight();
-
-       tx = [0, dx>>3, 3*dx>>3, 5*dx>>3, dx-dx>>3, dx+1];
-       ty = [40, 40+dx>>3, 40+3*dx>>3, 40+5*dx>>3, 40+7*dx>>3, dy+1];
-       tileW = dx>>2;
-       tileH = dx>>2;
-       */
        // hard coded for devices with 200x265
-       dx=200;
+       dx=dc.getWidth();
        dy=dc.getHeight();
        tx=[ 0, 25,  75, 125, 175, 201];
        ty=[40, 65, 115, 165, 215, 266];
@@ -110,7 +100,33 @@ class EveryTileView extends Ui.DataField {
        return true;
     }
 
+    (:ed1000)
+    function onLayout(dc)
+    {
+       // hard coded for devices with 240x400
+       dx=dc.getWidth();
+       dy=dc.getHeight();
+       tx=[ 0, 30,  90, 150, 210, 241];
+       ty=[100, 160, 220, 280, 340, 401];
+       tileW=60;
+       tileH=60;
 
+       return true;
+    }
+
+    (:ed1030)
+    function onLayout(dc)
+    {
+       // hard coded for devices with 282x470
+       dx=dc.getWidth();
+       dy=dc.getHeight();
+       tx=[ 0, 33,  105, 177, 249, 283];
+       ty=[110, 182, 254, 326, 398, 471];
+       tileW=72;
+       tileH=72;
+
+       return true;
+    }
 
     // The given info object contains all the current workout information.
     // Calculate a value and save it locally in this method.
@@ -286,7 +302,7 @@ class EveryTileView extends Ui.DataField {
            dc.setPenWidth(1);
          }else
          {
-            dc.setClip(0,0,200,265);
+            dc.setClip(0,0,dx,dy);
             dc.drawText(dx/2,5,Gfx.FONT_MEDIUM,Ui.loadResource(Rez.Strings.wholeDisp),Gfx.TEXT_JUSTIFY_CENTER);
          }
 
