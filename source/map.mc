@@ -182,30 +182,31 @@ class map{
                {
                  vec[hlati] -= 48;
                }
-               bigMap[i*4]   =  vec[0]
-                               +vec[1]<<6
-                               +vec[2]<<12
-                               +vec[3]<<18
-                               +vec[4]<<24
-                               +(vec[20] & 0x01)<<30;
-               bigMap[i*4+1] =  vec[5]
-                               +vec[6]<<6
-                               +vec[7]<<12
-                               +vec[8]<<18
-                               +vec[9]<<24
-                               +(vec[20] & 0x02)<<29;
-               bigMap[i*4+2] =  vec[10]
-                               +vec[11]<<6
-                               +vec[12]<<12
-                               +vec[13]<<18
-                               +vec[14]<<24
-                               +(vec[20] & 0x04)<<28;
-               bigMap[i*4+3] =  vec[15]
-                               +vec[16]<<6
-                               +vec[17]<<12
-                               +vec[18]<<18
-                               +vec[19]<<24
-                               +(vec[20] & 0x08)<<27;
+               hlati = i*4;
+               bigMap[hlati]   =  vec[0]
+                                 +vec[1]<<6
+                                 +vec[2]<<12
+                                 +vec[3]<<18
+                                 +vec[4]<<24
+                                 +(vec[20] & 0x01)<<30;
+               bigMap[hlati+1] =  vec[5]
+                                 +vec[6]<<6
+                                 +vec[7]<<12
+                                 +vec[8]<<18
+                                 +vec[9]<<24
+                                 +(vec[20] & 0x02)<<29;
+               bigMap[hlati+2] =  vec[10]
+                                 +vec[11]<<6
+                                 +vec[12]<<12
+                                 +vec[13]<<18
+                                 +vec[14]<<24
+                                 +(vec[20] & 0x04)<<28;
+               bigMap[hlati+3] =  vec[15]
+                                 +vec[16]<<6
+                                 +vec[17]<<12
+                                 +vec[18]<<18
+                                 +vec[19]<<24
+                                 +(vec[20] & 0x08)<<27;
              }
           }
 

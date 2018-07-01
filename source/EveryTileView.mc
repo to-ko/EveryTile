@@ -32,6 +32,10 @@ class EveryTileView extends Ui.DataField {
     hidden var dy = 0;
     hidden var heading = 0.0;
     hidden var mp;          // main map object
+    hidden var landsc=false;
+    hidden var mx;
+    hidden var my;
+    hidden var singleDF = true;
 
 
     function deg2px(dgr)
@@ -92,6 +96,15 @@ class EveryTileView extends Ui.DataField {
        // hard coded for devices with 200x265
        dx=dc.getWidth();
        dy=dc.getHeight();
+       mx = dx>>1;
+       my = dy>>1;
+       if (dx != 200 || dy != 265)
+       {
+          singleDF = false;
+       }else
+       {
+          singleDF = true;
+       }
        tx=[ 0, 25,  75, 125, 175, 201];
        ty=[40, 65, 115, 165, 215, 266];
        tileW=50;
@@ -103,27 +116,81 @@ class EveryTileView extends Ui.DataField {
     (:ed1000)
     function onLayout(dc)
     {
-       // hard coded for devices with 240x400
        dx=dc.getWidth();
        dy=dc.getHeight();
-       tx=[ 0, 30,  90, 150, 210, 241];
-       ty=[100, 160, 220, 280, 340, 401];
-       tileW=60;
-       tileH=60;
-
+       mx = dx>>1;
+       my = dy>>1;
+       if(dx>dy)
+       {
+          // hard coded for devices with 400x240
+          if (dx != 400 || dy != 240)
+          {
+             singleDF = false;
+          }else
+          {
+             singleDF = true;
+          }
+          tx=[ 100, 160,  220, 280, 340, 401];
+          ty=[0, 30, 90, 150, 210, 241];
+          tileW=60;
+          tileH=60;
+          landsc = true;
+       }else
+       {
+          // hard coded for devices with 240x400
+          if (dx != 240 || dy != 400)
+          {
+             singleDF = false;
+          }else
+          {
+             singleDF = true;
+          }
+          tx=[ 0, 30,  90, 150, 210, 241];
+          ty=[100, 160, 220, 280, 340, 401];
+          tileW=60;
+          tileH=60;
+          landsc = false;
+       }
        return true;
     }
 
     (:ed1030)
     function onLayout(dc)
     {
-       // hard coded for devices with 282x470
        dx=dc.getWidth();
        dy=dc.getHeight();
-       tx=[ 0, 33,  105, 177, 249, 283];
-       ty=[110, 182, 254, 326, 398, 471];
-       tileW=72;
-       tileH=72;
+       mx = dx>>1;
+       my = dy>>1;
+       if(dx>dy)
+       {
+          // hard coded for devices with 470x282
+          if (dx != 470 || dy != 282)
+          {
+             singleDF = false;
+          }else
+          {
+             singleDF = true;
+          }
+          tx=[ 110, 182,  254, 326, 398, 471];
+          ty=[ 0, 33,  105, 177, 249, 283];
+          tileW=72;
+          tileH=72;
+       }else
+       {
+          // hard coded for devices with 282x470
+          if (dx != 282 || dy != 470)
+          {
+             singleDF = false;
+          }else
+          {
+             singleDF = true;
+          }
+          tx=[ 0, 33,  105, 177, 249, 283];
+          ty=[110, 182, 254, 326, 398, 471];
+          tileW=72;
+          tileH=72;
+          landsc = false;
+       }
 
        return true;
     }
@@ -174,17 +241,16 @@ class EveryTileView extends Ui.DataField {
                 mp.setTiles(cpt.p,cpt.l);
                 cpt.save();
                 //Storage.setValue eats mem like crazy, free some up before saving...
-                //cpt.p = null;
+                cpt.p = null;
                 pt.p = null;
                 mp.save();
-                //cpt.load();
+                cpt.load();
                 pt.p = new[100];
                 pt.set(0,dgr);
              }
           }
        }
     }
-
 
 
     function fgbgCol(dc, col1, col2)
@@ -238,29 +304,65 @@ class EveryTileView extends Ui.DataField {
     }
 
 
+    (:header)
+    function header(dc)
+    {
+       dc.setClip(tx[0],0,dx,ty[0]);
+
+       dc.drawText(mx, ty[0]/4, Gfx.FONT_SMALL,
+              "new: "+mp.newTiles.format("%i")+", tot: "+mp.newTilesR.format("%i")+", pos: ["+(mp.loni-mp.hloni).format("%i")+"/"+(mp.lati-mp.hlati).format("%i")+"]",
+              Gfx.TEXT_JUSTIFY_CENTER);
+
+       dc.setClip(tx[0],ty[0],dx,dy-ty[0]);
+    }
+
+    (:headerV)
+    function header(dc)
+    {
+       if(landsc==true)
+       {
+           dc.setClip(0,0,tx[0],dy);
+           dc.drawText(tx[0]/2, dy/4-16, Gfx.FONT_TINY, "new tiles",Gfx.TEXT_JUSTIFY_CENTER);
+           dc.drawText(tx[0]/2, dy/4, Gfx.FONT_MEDIUM,
+              mp.newTiles.format("%i"),Gfx.TEXT_JUSTIFY_CENTER);
+           dc.drawText(tx[0]/2, dy/2-16, Gfx.FONT_TINY, "tiles crossed",Gfx.TEXT_JUSTIFY_CENTER);
+           dc.drawText(tx[0]/2, dy/2, Gfx.FONT_MEDIUM,
+              mp.newTilesR.format("%i"),Gfx.TEXT_JUSTIFY_CENTER);
+           dc.drawText(tx[0]/2, 3*dy/4-16, Gfx.FONT_TINY, "current pos.",Gfx.TEXT_JUSTIFY_CENTER);
+           dc.drawText(tx[0]/2,3*dy/4, Gfx.FONT_MEDIUM,
+             "["+(mp.loni-mp.hloni).format("%i")+"/"+(mp.lati-mp.hlati).format("%i")+"]",Gfx.TEXT_JUSTIFY_CENTER);
+
+           dc.setClip(tx[0],0,dx-tx[0],dy);
+        }else
+        {
+           dc.setClip(tx[0],0,dx,ty[0]);
+
+           dc.drawText(mx, 1, Gfx.FONT_MEDIUM,
+              "new tiles: "+mp.newTiles.format("%i"),Gfx.TEXT_JUSTIFY_CENTER);
+           dc.drawText(mx, ty[0]/3, Gfx.FONT_MEDIUM,
+              "tiles crossed: "+mp.newTilesR.format("%i"),Gfx.TEXT_JUSTIFY_CENTER);
+           dc.drawText(mx, 2*ty[0]/3, Gfx.FONT_MEDIUM,
+              "current pos.: ["+(mp.loni-mp.hloni).format("%i")+"/"+(mp.lati-mp.hlati).format("%i")+"]",
+              Gfx.TEXT_JUSTIFY_CENTER);
+
+           dc.setClip(tx[0],ty[0],dx,dy-ty[0]);
+        }
+    }
+
     // Display the value you computed here. This will be called
     // once a second when the data field is visible.
     function onUpdate(dc) {
         fgbgCol(dc,Gfx.COLOR_WHITE,Gfx.COLOR_BLACK);
 
         //this data field works only in 1-datafield layout
-        if((dx>=200) & (dy>=265))
+        if(singleDF==true)
         {
-           var mx = dx>>1;
-           var my = dy>>1;
            var lx=0;
            var ly=0;
            var i=0;
 
+           header(dc);
 
-           // header line
-           dc.setClip(tx[0],0,dx,ty[0]);
-
-           dc.drawText(mx, ty[0]/4, Gfx.FONT_MEDIUM,
-              mp.newTiles.format("%i")+","+mp.newTilesR.format("%i")+",["+(mp.loni-mp.hloni).format("%i")+"/"+(mp.lati-mp.hlati).format("%i")+"]",
-              Gfx.TEXT_JUSTIFY_CENTER);
-
-           dc.setClip(tx[0],ty[0],dx,dy-ty[0]);
            // draw 5x5 tiles
            for(ly=0;ly<5;ly++)
            {
