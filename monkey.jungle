@@ -1,4 +1,6 @@
 project.manifest = manifest.xml
+
+
 # edge 520, 820 etc
 rectangle-200x265.excludeAnnotations = ed1000;ed1030;headerV
 # edge 1000 etc

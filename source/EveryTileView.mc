@@ -89,6 +89,11 @@ class EveryTileView extends Ui.DataField {
        }
     }
 
+    function onTimerStart()
+    {
+       initialized=false;
+    }
+
 
     (:ed520)
     function onLayout(dc)
@@ -207,12 +212,6 @@ class EveryTileView extends Ui.DataField {
           if(heading==null)
           {
              heading = 0.0;
-          }
-          if (info.elapsedTime < 100)
-          {
-             //case when new activity was started, but the old view is still alive
-             initialized=false;
-             return;
           }
 
           if (info.currentLocation != null)
