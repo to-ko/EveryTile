@@ -89,7 +89,7 @@ class EveryTileView extends Ui.DataField {
        }
     }
 
-    function onTimerStart()
+    function onTimerReset()
     {
        initialized=false;
     }
@@ -117,6 +117,48 @@ class EveryTileView extends Ui.DataField {
 
        return true;
     }
+
+    (:ed530)
+    function onLayout(dc)
+    {
+       dx=dc.getWidth();
+       dy=dc.getHeight();
+       mx = dx>>1;
+       my = dy>>1;
+       if(dx>dy)
+       {
+          // hard coded for devices with 322x246
+          if (dx != 322 || dy != 246)
+          {
+             singleDF = false;
+          }else
+          {
+             singleDF = true;
+          }
+          tx=[ 72, 122,  172, 222, 272, 323];
+          ty=[0, 48, 98, 148, 198, 247];
+          tileW=50;
+          tileH=50;
+          landsc = true;
+       }else
+       {
+          // hard coded for devices with 246x322
+          if (dx != 246 || dy != 322)
+          {
+             singleDF = false;
+          }else
+          {
+             singleDF = true;
+          }
+          tx=[ 0, 48,  98, 148, 198, 247];
+          ty=[72, 122, 172, 222, 272, 323];
+          tileW=50;
+          tileH=50;
+          landsc = false;
+       }
+       return true;
+    }
+
 
     (:ed1000)
     function onLayout(dc)
@@ -377,7 +419,7 @@ class EveryTileView extends Ui.DataField {
 
            // fine grained path
            dc.setPenWidth(2);
-           fgbgCol(dc,Gfx.COLOR_LT_GRAY,Gfx.COLOR_BLACK);
+           fgbgCol(dc,Gfx.COLOR_DK_GRAY,Gfx.COLOR_BLACK);
 
            lx=px[0];
            ly=px[1];

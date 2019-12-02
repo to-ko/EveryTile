@@ -2,8 +2,10 @@ project.manifest = manifest.xml
 
 
 # edge 520, 820 etc
-rectangle-200x265.excludeAnnotations = ed1000;ed1030;headerV
+rectangle-200x265.excludeAnnotations = ed1000;ed1030;ed530;headerV
 # edge 1000 etc
-rectangle-240x400.excludeAnnotations = ed520;ed1030;header
+rectangle-240x400.excludeAnnotations = ed520;ed1030;ed530;header
 # edge 1030 etc
-rectangle-282x470.excludeAnnotations = ed520;ed1000;header
+rectangle-282x470.excludeAnnotations = ed520;ed1000;ed530;header
+# edge 530, 830 etc
+rectangle-246x322.excludeAnnotations = ed520;ed1030;ed1000;header
