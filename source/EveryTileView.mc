@@ -94,6 +94,32 @@ class EveryTileView extends Ui.DataField {
        initialized=false;
     }
 
+	(:fenix6)
+    function onLayout(dc)
+    {
+    	var mySettings = System.getDeviceSettings();
+		var sWidth = mySettings.screenWidth;
+		var sHeight = mySettings.screenHeight;
+       dx=dc.getWidth();
+       dy=dc.getHeight();
+       mx = dx>>1;
+       my = dy>>1;
+       if (dx != sWidth || dy != sHeight)
+       {
+          singleDF = false;
+       }else
+       {
+          singleDF = true;
+       }
+       tileW = sWidth/5;
+       tileH = sHeight/5;
+       tx=[ 0, tileW*1, tileW*2, tileW*3, tileW*4, tileW*5+1];
+       ty=[ 0, tileW*1, tileW*2, tileW*3, tileW*4, tileW*5+1];
+       
+
+       return true;
+    }
+
 
     (:ed520)
     function onLayout(dc)
@@ -355,6 +381,25 @@ class EveryTileView extends Ui.DataField {
               Gfx.TEXT_JUSTIFY_CENTER);
 
        dc.setClip(tx[0],ty[0],dx,dy-ty[0]);
+    }
+    
+    
+    (:headerC)
+    function header(dc)
+    {
+       dc.setClip(0,0,dx,tileH/2);
+
+       dc.drawText(mx,tileH/2-dc.getFontHeight(Gfx.FONT_SYSTEM_XTINY) , Gfx.FONT_SYSTEM_XTINY,
+              "n: "+mp.newTiles.format("%i")+", t: "+mp.newTilesR.format("%i"),
+              Gfx.TEXT_JUSTIFY_CENTER);
+              
+       dc.setClip(0,dy-tileH/2,dx,dy);
+              
+       dc.drawText(mx, dy-tileH/2, Gfx.FONT_SYSTEM_XTINY,
+              "["+(mp.loni-mp.hloni).format("%i")+"/"+(mp.lati-mp.hlati).format("%i")+"]",
+              Gfx.TEXT_JUSTIFY_CENTER);
+              
+       dc.setClip(0,tileH / 2,dx,tileH * 4);
     }
 
     (:headerV)
