@@ -17,6 +17,7 @@ using Toybox.Graphics as Gfx;
 using Toybox.Math as Math;
 using Toybox.Activity as Act;
 using Toybox.Application.Storage;
+using Toybox.System;
 
 class EveryTileView extends Ui.DataField {
     hidden var tileW = 50;
@@ -36,6 +37,12 @@ class EveryTileView extends Ui.DataField {
     hidden var mx;
     hidden var my;
     hidden var singleDF = true;
+    
+    hidden var lastPauseClick = 0;
+    hidden var zoom = false;
+    hidden var reLayout = false;
+    hidden var standardTileH = tileH;
+   
 
 
     function deg2px(dgr)
@@ -93,7 +100,23 @@ class EveryTileView extends Ui.DataField {
     {
        initialized=false;
     }
-
+    
+    
+    function onTimerStop()
+    {
+       lastPauseClick = System.getTimer();
+    }
+    
+    function onTimerStart()
+    {
+    	if(  System.getTimer() - lastPauseClick < 500) {
+    	 zoom = !zoom;
+    	 reLayout = true;
+    	}
+       
+       
+    }
+    
 	(:fenix6)
     function onLayout(dc)
     {
@@ -111,12 +134,20 @@ class EveryTileView extends Ui.DataField {
        {
           singleDF = true;
        }
-       tileW = sWidth/5;
-       tileH = sHeight/5;
-       tx=[ 0, tileW*1, tileW*2, tileW*3, tileW*4, tileW*5+1];
-       ty=[ 0, tileW*1, tileW*2, tileW*3, tileW*4, tileW*5+1];
+       if(!zoom) {
+       	   tileW = sWidth/5;
+	       tileH = sHeight/5;
+	       standardTileH = tileH;
+	       tx=[ 0, tileW*1, tileW*2, tileW*3, tileW*4, tileW*5+1];
+	       ty=[ 0, tileW*1, tileW*2, tileW*3, tileW*4, tileW*5+1];
+       } else {
+       		tileW = sWidth/2;
+	       tileH = sHeight/2;
+	       tx=[ 0, 0, tileW/2, tileW*1.5, sWidth, sWidth];
+	       ty=[ 0, 0, tileW/2, tileW*1.5, sWidth, sWidth];
+       }
        
-
+       
        return true;
     }
 
@@ -387,19 +418,19 @@ class EveryTileView extends Ui.DataField {
     (:headerC)
     function header(dc)
     {
-       dc.setClip(0,0,dx,tileH/2);
+       dc.setClip(0,0,dx,standardTileH/2);
 
-       dc.drawText(mx,tileH/2-dc.getFontHeight(Gfx.FONT_SYSTEM_XTINY) , Gfx.FONT_SYSTEM_XTINY,
+       dc.drawText(mx,standardTileH/2-dc.getFontHeight(Gfx.FONT_SYSTEM_XTINY) , Gfx.FONT_SYSTEM_XTINY,
               "n: "+mp.newTiles.format("%i")+", t: "+mp.newTilesR.format("%i"),
               Gfx.TEXT_JUSTIFY_CENTER);
               
-       dc.setClip(0,dy-tileH/2,dx,dy);
+       dc.setClip(0,dy-standardTileH/2,dx,dy);
               
-       dc.drawText(mx, dy-tileH/2, Gfx.FONT_SYSTEM_XTINY,
+       dc.drawText(mx, dy-standardTileH/2, Gfx.FONT_SYSTEM_XTINY,
               "["+(mp.loni-mp.hloni).format("%i")+"/"+(mp.lati-mp.hlati).format("%i")+"]",
               Gfx.TEXT_JUSTIFY_CENTER);
               
-       dc.setClip(0,tileH / 2,dx,tileH * 4);
+       dc.setClip(0,standardTileH / 2,dx,standardTileH * 4);
     }
 
     (:headerV)
@@ -438,6 +469,12 @@ class EveryTileView extends Ui.DataField {
     // Display the value you computed here. This will be called
     // once a second when the data field is visible.
     function onUpdate(dc) {
+    
+    	if(reLayout) {
+    		onLayout(dc);
+    		reLayout = false;
+    	}
+    	
         fgbgCol(dc,Gfx.COLOR_WHITE,Gfx.COLOR_BLACK);
 
         //this data field works only in 1-datafield layout
