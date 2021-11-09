@@ -20,60 +20,36 @@ using Toybox.Application.Storage;
 using Toybox.System;
 
 class EveryTileView extends Ui.DataField {
-    hidden var tileW = 50;
-    hidden var tileH = 50;
+    hidden var tileWidth = 50;
+    hidden var tileHeight = 50;
     hidden var initialized = false;
 
-    hidden var pt;          // fine path
-    hidden var cpt;         // coarse path
+    hidden var finePath;          // fine path
+    hidden var coarsePath;         // coarse path
 
     hidden var tx = new[6]; // coordinates of tiles on the screen
     hidden var ty = new[6];
-    hidden var dx = 0;      // screen size
-    hidden var dy = 0;
+    hidden var displaySizeX = 0;      // screen size
+    hidden var displaySizeY = 0;
     hidden var heading = 0.0;
-    hidden var mp;          // main map object
-    hidden var landsc=false;
-    hidden var mx;
-    hidden var my;
-    hidden var singleDF = true;
+    hidden var mainMap;          // main map object
+    hidden var landscapeMode=false;
+    hidden var displayMiddleX;
+    hidden var displayMiddleY;
+    hidden var singleDataField = true;
     
     hidden var lastPauseClick = 0;
-    hidden var zoom = false;
-    hidden var reLayout = false;
-    hidden var standardTileH = tileH;
-   
-
-
-    function deg2px(dgr)
-    {
-       var px = [0, 0];
-       px[0] = Math.floor((((dgr[1] + 180.0) * 45.5111111111111)-mp.loni) * tileW).toNumber();
-       px[1] = Math.floor(((1.0 - Math.ln(Math.tan(dgr[0]*0.0174532925199433) + (1.0 / Math.cos(dgr[0]*0.0174532925199433))) * 0.318309886183791) *8192-mp.lati)*tileH).toNumber();
-       return px;
-    }
-
-    function pxdist(dgr1,dgr2)
-    {
-       if (  (   ((dgr1[1]-dgr2[1]) * 45.5111111111111 * tileW ).abs().toNumber()>1 ) ||
-             (   ( (- Math.ln(Math.tan(dgr1[0]*0.0174532925199433) + (1.0 / Math.cos(dgr1[0]*0.0174532925199433)))
-                    + Math.ln(Math.tan(dgr2[0]*0.0174532925199433) + (1.0 / Math.cos(dgr2[0]*0.0174532925199433))) ) * 0.318309886183791 *8192*tileH
-                 ).abs().toNumber()>1))
-       {
-          return true;
-       }else
-       {
-          return false;
-       }
-    }
+    hidden var zoomMode = false;
+    hidden var redoLayout = false;
+    hidden var standardTileHeight = tileHeight;
 
 
     function initialize()
     {
        DataField.initialize();
-       mp = new map();
-       pt = new path(50,mp.hlon,mp.hlat);
-       cpt= new path(200,mp.hlon,mp.hlat);
+       mainMap = new map();
+       finePath = new path(50,mainMap.hlon,mainMap.hlat);
+       coarsePath= new path(200,mainMap.hlon,mainMap.hlat);
 
        initialized=false;
 
@@ -81,17 +57,17 @@ class EveryTileView extends Ui.DataField {
        if( (inf!=null) && (inf.elapsedTime > 10000) )
        {
           // attempt to continue activity
-          mp.newTiles=Storage.getValue("newTiles");
-          mp.newTilesR=Storage.getValue("newTilesR");
-          if( cpt.load() && (mp.newTiles!=null) && (mp.newTilesR!=null) )
+          mainMap.newTiles=Storage.getValue("newTiles");
+          mainMap.newTilesR=Storage.getValue("newTilesR");
+          if( coarsePath.load() && (mainMap.newTiles!=null) && (mainMap.newTilesR!=null) )
           {
-             pt.set(0,cpt.getDeg(null));
-             mp.setMap(pt.p[0],pt.p[1]);
+             finePath.set(0,coarsePath.getDeg(null));
+             mainMap.setMap(finePath.p[0],finePath.p[1]);
              initialized = true;
           }else
           {
-             mp.newTiles = 0;
-             mp.newTilesR = 0;
+             mainMap.newTiles = 0;
+             mainMap.newTilesR = 0;
           }
        }
     }
@@ -110,8 +86,8 @@ class EveryTileView extends Ui.DataField {
     function onTimerStart()
     {
     	if(  System.getTimer() - lastPauseClick < 500) {
-    	 zoom = !zoom;
-    	 reLayout = true;
+    	 zoomMode = !zoomMode;
+    	 redoLayout = true;
     	}
        
        
@@ -123,28 +99,28 @@ class EveryTileView extends Ui.DataField {
     	var mySettings = System.getDeviceSettings();
 		var sWidth = mySettings.screenWidth;
 		var sHeight = mySettings.screenHeight;
-       dx=dc.getWidth();
-       dy=dc.getHeight();
-       mx = dx>>1;
-       my = dy>>1;
-       if (dx != sWidth || dy != sHeight)
+       displaySizeX=dc.getWidth();
+       displaySizeY=dc.getHeight();
+       displayMiddleX = displaySizeX>>1;
+       displayMiddleY = displaySizeY>>1;
+       if (displaySizeX != sWidth || displaySizeY != sHeight)
        {
-          singleDF = false;
+          singleDataField = false;
        }else
        {
-          singleDF = true;
+          singleDataField = true;
        }
-       if(!zoom) {
-       	   tileW = sWidth/5;
-	       tileH = sHeight/5;
-	       standardTileH = tileH;
-	       tx=[ 0, tileW*1, tileW*2, tileW*3, tileW*4, tileW*5+1];
-	       ty=[ 0, tileW*1, tileW*2, tileW*3, tileW*4, tileW*5+1];
+       if(!zoomMode) {
+       	   tileWidth = sWidth/5;
+	       tileHeight = sHeight/5;
+	       standardTileHeight = tileHeight;
+	       tx=[ 0, tileWidth*1, tileWidth*2, tileWidth*3, tileWidth*4, tileWidth*5+1];
+	       ty=[ 0, tileWidth*1, tileWidth*2, tileWidth*3, tileWidth*4, tileWidth*5+1];
        } else {
-       		tileW = sWidth/2;
-	       tileH = sHeight/2;
-	       tx=[ 0, 0, tileW/2, tileW*1.5, sWidth, sWidth];
-	       ty=[ 0, 0, tileW/2, tileW*1.5, sWidth, sWidth];
+       		tileWidth = sWidth/2;
+	       tileHeight = sHeight/2;
+	       tx=[ 0, 0, tileWidth/2, tileWidth*1.5, sWidth, sWidth];
+	       ty=[ 0, 0, tileWidth/2, tileWidth*1.5, sWidth, sWidth];
        }
        
        
@@ -156,21 +132,21 @@ class EveryTileView extends Ui.DataField {
     function onLayout(dc)
     {
        // hard coded for devices with 200x265
-       dx=dc.getWidth();
-       dy=dc.getHeight();
-       mx = dx>>1;
-       my = dy>>1;
-       if (dx != 200 || dy != 265)
+       displaySizeX=dc.getWidth();
+       displaySizeY=dc.getHeight();
+       displayMiddleX = displaySizeX>>1;
+       displayMiddleY = displaySizeY>>1;
+       if (displaySizeX != 200 || displaySizeY != 265)
        {
-          singleDF = false;
+          singleDataField = false;
        }else
        {
-          singleDF = true;
+          singleDataField = true;
        }
        tx=[ 0, 25,  75, 125, 175, 201];
        ty=[40, 65, 115, 165, 215, 266];
-       tileW=50;
-       tileH=50;
+       tileWidth=50;
+       tileHeight=50;
 
        return true;
     }
@@ -178,40 +154,40 @@ class EveryTileView extends Ui.DataField {
     (:ed530)
     function onLayout(dc)
     {
-       dx=dc.getWidth();
-       dy=dc.getHeight();
-       mx = dx>>1;
-       my = dy>>1;
-       if(dx>dy)
+       displaySizeX=dc.getWidth();
+       displaySizeY=dc.getHeight();
+       displayMiddleX = displaySizeX>>1;
+       displayMiddleY = displaySizeY>>1;
+       if(displaySizeX>displaySizeY)
        {
           // hard coded for devices with 322x246
-          if (dx != 322 || dy != 246)
+          if (displaySizeX != 322 || displaySizeY != 246)
           {
-             singleDF = false;
+             singleDataField = false;
           }else
           {
-             singleDF = true;
+             singleDataField = true;
           }
           tx=[ 72, 122,  172, 222, 272, 323];
           ty=[0, 48, 98, 148, 198, 247];
-          tileW=50;
-          tileH=50;
-          landsc = true;
+          tileWidth=50;
+          tileHeight=50;
+          landscapeMode = true;
        }else
        {
           // hard coded for devices with 246x322
-          if (dx != 246 || dy != 322)
+          if (displaySizeX != 246 || displaySizeY != 322)
           {
-             singleDF = false;
+             singleDataField = false;
           }else
           {
-             singleDF = true;
+             singleDataField = true;
           }
           tx=[ 0, 48,  98, 148, 198, 247];
           ty=[72, 122, 172, 222, 272, 323];
-          tileW=50;
-          tileH=50;
-          landsc = false;
+          tileWidth=50;
+          tileHeight=50;
+          landscapeMode = false;
        }
        return true;
     }
@@ -220,40 +196,40 @@ class EveryTileView extends Ui.DataField {
     (:ed1000)
     function onLayout(dc)
     {
-       dx=dc.getWidth();
-       dy=dc.getHeight();
-       mx = dx>>1;
-       my = dy>>1;
-       if(dx>dy)
+       displaySizeX=dc.getWidth();
+       displaySizeY=dc.getHeight();
+       displayMiddleX = displaySizeX>>1;
+       displayMiddleY = displaySizeY>>1;
+       if(displaySizeX>displaySizeY)
        {
           // hard coded for devices with 400x240
-          if (dx != 400 || dy != 240)
+          if (displaySizeX != 400 || displaySizeY != 240)
           {
-             singleDF = false;
+             singleDataField = false;
           }else
           {
-             singleDF = true;
+             singleDataField = true;
           }
           tx=[ 100, 160,  220, 280, 340, 401];
           ty=[0, 30, 90, 150, 210, 241];
-          tileW=60;
-          tileH=60;
-          landsc = true;
+          tileWidth=60;
+          tileHeight=60;
+          landscapeMode = true;
        }else
        {
           // hard coded for devices with 240x400
-          if (dx != 240 || dy != 400)
+          if (displaySizeX != 240 || displaySizeY != 400)
           {
-             singleDF = false;
+             singleDataField = false;
           }else
           {
-             singleDF = true;
+             singleDataField = true;
           }
           tx=[ 0, 30,  90, 150, 210, 241];
           ty=[100, 160, 220, 280, 340, 401];
-          tileW=60;
-          tileH=60;
-          landsc = false;
+          tileWidth=60;
+          tileHeight=60;
+          landscapeMode = false;
        }
        return true;
     }
@@ -261,39 +237,39 @@ class EveryTileView extends Ui.DataField {
     (:ed1030)
     function onLayout(dc)
     {
-       dx=dc.getWidth();
-       dy=dc.getHeight();
-       mx = dx>>1;
-       my = dy>>1;
-       if(dx>dy)
+       displaySizeX=dc.getWidth();
+       displaySizeY=dc.getHeight();
+       displayMiddleX = displaySizeX>>1;
+       displayMiddleY = displaySizeY>>1;
+       if(displaySizeX>displaySizeY)
        {
           // hard coded for devices with 470x282
-          if (dx != 470 || dy != 282)
+          if (displaySizeX != 470 || displaySizeY != 282)
           {
-             singleDF = false;
+             singleDataField = false;
           }else
           {
-             singleDF = true;
+             singleDataField = true;
           }
           tx=[ 110, 182,  254, 326, 398, 471];
           ty=[ 0, 33,  105, 177, 249, 283];
-          tileW=72;
-          tileH=72;
+          tileWidth=72;
+          tileHeight=72;
        }else
        {
           // hard coded for devices with 282x470
-          if (dx != 282 || dy != 470)
+          if (displaySizeX != 282 || displaySizeY != 470)
           {
-             singleDF = false;
+             singleDataField = false;
           }else
           {
-             singleDF = true;
+             singleDataField = true;
           }
           tx=[ 0, 33,  105, 177, 249, 283];
           ty=[110, 182, 254, 326, 398, 471];
-          tileW=72;
-          tileH=72;
-          landsc = false;
+          tileWidth=72;
+          tileHeight=72;
+          landscapeMode = false;
        }
 
        return true;
@@ -320,31 +296,31 @@ class EveryTileView extends Ui.DataField {
              var i= 0;
              if(!initialized)
              {
-                pt.set(0,dgr);
-                //cpt.set(0,dgr);
-                cpt.l=-1;
-                mp.newTiles = 0;
-                mp.newTilesR= 0;
+                finePath.set(0,dgr);
+                //coarsePath.set(0,dgr);
+                coarsePath.l=-1;
+                mainMap.newTiles = 0;
+                mainMap.newTilesR= 0;
                 initialized=true;
-                mp.loni = 16385; // to force a map update
+                mainMap.loni = mainMap.totalTiles + 1; // to force a map update
              }
 
-             if( pxdist(dgr,pt.getDeg(null)) )
+             if( mainMap.isDistanceBiggerThanPixel(dgr,finePath.getDeg(null), tileWidth, tileHeight) )
              {
-                pt.add(dgr);
+                finePath.add(dgr);
              }
-             if( mp.setMap(dgr[1],dgr[0]) )
+             if( mainMap.setMap(dgr[1],dgr[0]) )
              {
-                cpt.add(dgr);
-                mp.setTiles(cpt.p,cpt.l);
-                cpt.save();
+                coarsePath.add(dgr);
+                mainMap.setTiles(coarsePath.p,coarsePath.l);
+                coarsePath.save();
                 //Storage.setValue eats mem like crazy, free some up before saving...
-                cpt.p = null;
-                pt.p = null;
-                mp.save();
-                cpt.load();
-                pt.p = new[100];
-                pt.set(0,dgr);
+                coarsePath.p = null;
+                finePath.p = null;
+                mainMap.save();
+                coarsePath.load();
+                finePath.p = new[100];
+                finePath.set(0,dgr);
              }
           }
        }
@@ -362,7 +338,6 @@ class EveryTileView extends Ui.DataField {
        }
     }
 
-
     function setCol(dc,v)
     {
       if(v==0)
@@ -378,6 +353,22 @@ class EveryTileView extends Ui.DataField {
          dc.setColor(Gfx.COLOR_GREEN, Gfx.COLOR_GREEN);
       }
     }
+
+//    function setCol(dc,v)
+//    {
+//      if(v==0)
+//      {
+//         dc.setColor(Gfx.COLOR_LT_GRAY, Gfx.COLOR_LT_GRAY);
+//      }
+//      if(v==1)
+//      {
+//         dc.setColor(Gfx.COLOR_PURPLE, Gfx.COLOR_PURPLE);
+//      }
+//      if(v==2)
+//      {
+//         dc.setColor(Gfx.COLOR_PINK, Gfx.COLOR_PINK);
+//      }
+//    }
 
 
     function plotArrow(dc,x,y)
@@ -405,64 +396,64 @@ class EveryTileView extends Ui.DataField {
     (:header)
     function header(dc)
     {
-       dc.setClip(tx[0],0,dx,ty[0]);
+       dc.setClip(tx[0],0,displaySizeX,ty[0]);
 
-       dc.drawText(mx, ty[0]/4, Gfx.FONT_SMALL,
-              "new: "+mp.newTiles.format("%i")+", tot: "+mp.newTilesR.format("%i")+", pos: ["+(mp.loni-mp.hloni).format("%i")+"/"+(mp.lati-mp.hlati).format("%i")+"]",
+       dc.drawText(displayMiddleX, ty[0]/4, Gfx.FONT_SMALL,
+              "new: "+mainMap.newTiles.format("%i")+", tot: "+mainMap.newTilesR.format("%i")+", pos: ["+(mainMap.loni-mainMap.hloni).format("%i")+"/"+(mainMap.lati-mainMap.hlati).format("%i")+"]",
               Gfx.TEXT_JUSTIFY_CENTER);
 
-       dc.setClip(tx[0],ty[0],dx,dy-ty[0]);
+       dc.setClip(tx[0],ty[0],displaySizeX,displaySizeY-ty[0]);
     }
     
     
     (:headerC)
     function header(dc)
     {
-       dc.setClip(0,0,dx,standardTileH/2);
+       dc.setClip(0,0,displaySizeX,standardTileHeight/2);
 
-       dc.drawText(mx,standardTileH/2-dc.getFontHeight(Gfx.FONT_SYSTEM_XTINY) , Gfx.FONT_SYSTEM_XTINY,
-              "n: "+mp.newTiles.format("%i")+", t: "+mp.newTilesR.format("%i"),
+       dc.drawText(displayMiddleX,standardTileHeight/2-dc.getFontHeight(Gfx.FONT_SYSTEM_XTINY) , Gfx.FONT_SYSTEM_XTINY,
+              "n: "+mainMap.newTiles.format("%i")+", t: "+mainMap.newTilesR.format("%i"),
               Gfx.TEXT_JUSTIFY_CENTER);
               
-       dc.setClip(0,dy-standardTileH/2,dx,dy);
+       dc.setClip(0,displaySizeY-standardTileHeight/2,displaySizeX,displaySizeY);
               
-       dc.drawText(mx, dy-standardTileH/2, Gfx.FONT_SYSTEM_XTINY,
-              "["+(mp.loni-mp.hloni).format("%i")+"/"+(mp.lati-mp.hlati).format("%i")+"]",
+       dc.drawText(displayMiddleX, displaySizeY-standardTileHeight/2, Gfx.FONT_SYSTEM_XTINY,
+              "["+(mainMap.loni-mainMap.hloni).format("%i")+"/"+(mainMap.lati-mainMap.hlati).format("%i")+"]",
               Gfx.TEXT_JUSTIFY_CENTER);
               
-       dc.setClip(0,standardTileH / 2,dx,standardTileH * 4);
+       dc.setClip(0,standardTileHeight / 2,displaySizeX,standardTileHeight * 4);
     }
 
     (:headerV)
     function header(dc)
     {
-       if(landsc==true)
+       if(landscapeMode==true)
        {
-           dc.setClip(0,0,tx[0],dy);
-           dc.drawText(tx[0]/2, dy/4-16, Gfx.FONT_TINY, "new tiles",Gfx.TEXT_JUSTIFY_CENTER);
-           dc.drawText(tx[0]/2, dy/4, Gfx.FONT_MEDIUM,
-              mp.newTiles.format("%i"),Gfx.TEXT_JUSTIFY_CENTER);
-           dc.drawText(tx[0]/2, dy/2-16, Gfx.FONT_TINY, "tiles crossed",Gfx.TEXT_JUSTIFY_CENTER);
-           dc.drawText(tx[0]/2, dy/2, Gfx.FONT_MEDIUM,
-              mp.newTilesR.format("%i"),Gfx.TEXT_JUSTIFY_CENTER);
-           dc.drawText(tx[0]/2, 3*dy/4-16, Gfx.FONT_TINY, "current pos.",Gfx.TEXT_JUSTIFY_CENTER);
-           dc.drawText(tx[0]/2,3*dy/4, Gfx.FONT_MEDIUM,
-             "["+(mp.loni-mp.hloni).format("%i")+"/"+(mp.lati-mp.hlati).format("%i")+"]",Gfx.TEXT_JUSTIFY_CENTER);
+           dc.setClip(0,0,tx[0],displaySizeY);
+           dc.drawText(tx[0]/2, displaySizeY/4-16, Gfx.FONT_TINY, "new tiles",Gfx.TEXT_JUSTIFY_CENTER);
+           dc.drawText(tx[0]/2, displaySizeY/4, Gfx.FONT_MEDIUM,
+              mainMap.newTiles.format("%i"),Gfx.TEXT_JUSTIFY_CENTER);
+           dc.drawText(tx[0]/2, displaySizeY/2-16, Gfx.FONT_TINY, "tiles crossed",Gfx.TEXT_JUSTIFY_CENTER);
+           dc.drawText(tx[0]/2, displaySizeY/2, Gfx.FONT_MEDIUM,
+              mainMap.newTilesR.format("%i"),Gfx.TEXT_JUSTIFY_CENTER);
+           dc.drawText(tx[0]/2, 3*displaySizeY/4-16, Gfx.FONT_TINY, "current pos.",Gfx.TEXT_JUSTIFY_CENTER);
+           dc.drawText(tx[0]/2,3*displaySizeY/4, Gfx.FONT_MEDIUM,
+             "["+(mainMap.loni-mainMap.hloni).format("%i")+"/"+(mainMap.lati-mainMap.hlati).format("%i")+"]",Gfx.TEXT_JUSTIFY_CENTER);
 
-           dc.setClip(tx[0],0,dx-tx[0],dy);
+           dc.setClip(tx[0],0,displaySizeX-tx[0],displaySizeY);
         }else
         {
-           dc.setClip(tx[0],0,dx,ty[0]);
+           dc.setClip(tx[0],0,displaySizeX,ty[0]);
 
-           dc.drawText(mx, 1, Gfx.FONT_MEDIUM,
-              "new tiles: "+mp.newTiles.format("%i"),Gfx.TEXT_JUSTIFY_CENTER);
-           dc.drawText(mx, ty[0]/3, Gfx.FONT_MEDIUM,
-              "tiles crossed: "+mp.newTilesR.format("%i"),Gfx.TEXT_JUSTIFY_CENTER);
-           dc.drawText(mx, 2*ty[0]/3, Gfx.FONT_MEDIUM,
-              "current pos.: ["+(mp.loni-mp.hloni).format("%i")+"/"+(mp.lati-mp.hlati).format("%i")+"]",
+           dc.drawText(displayMiddleX, 1, Gfx.FONT_MEDIUM,
+              "new tiles: "+mainMap.newTiles.format("%i"),Gfx.TEXT_JUSTIFY_CENTER);
+           dc.drawText(displayMiddleX, ty[0]/3, Gfx.FONT_MEDIUM,
+              "tiles crossed: "+mainMap.newTilesR.format("%i"),Gfx.TEXT_JUSTIFY_CENTER);
+           dc.drawText(displayMiddleX, 2*ty[0]/3, Gfx.FONT_MEDIUM,
+              "current pos.: ["+(mainMap.loni-mainMap.hloni).format("%i")+"/"+(mainMap.lati-mainMap.hlati).format("%i")+"]",
               Gfx.TEXT_JUSTIFY_CENTER);
 
-           dc.setClip(tx[0],ty[0],dx,dy-ty[0]);
+           dc.setClip(tx[0],ty[0],displaySizeX,displaySizeY-ty[0]);
         }
     }
 
@@ -470,15 +461,15 @@ class EveryTileView extends Ui.DataField {
     // once a second when the data field is visible.
     function onUpdate(dc) {
     
-    	if(reLayout) {
+    	if(redoLayout) {
     		onLayout(dc);
-    		reLayout = false;
+    		redoLayout = false;
     	}
     	
         fgbgCol(dc,Gfx.COLOR_WHITE,Gfx.COLOR_BLACK);
 
         //this data field works only in 1-datafield layout
-        if(singleDF==true)
+        if(singleDataField==true)
         {
            var lx=0;
            var ly=0;
@@ -491,12 +482,12 @@ class EveryTileView extends Ui.DataField {
            {
               for(lx=0;lx<5;lx++)
               {
-                 setCol(dc,mp.ltiles[lx+5*ly]);
+                 setCol(dc,mainMap.ltiles[lx+5*ly]);
                  dc.fillRectangle(tx[lx], ty[ly], tx[lx+1]-tx[lx]-1, ty[ly+1]-ty[ly]-1);
               }
            }
 
-           var px = deg2px([mp.clat,mp.clon]);
+           var px = mainMap.deg2px([mainMap.clat,mainMap.clon], tileWidth, tileHeight);
            plotArrow(dc,px[0]+tx[2],px[1]+ty[2]);
 
            // fine grained path
@@ -505,9 +496,9 @@ class EveryTileView extends Ui.DataField {
 
            lx=px[0];
            ly=px[1];
-           for(i=pt.l-1; i>=0; i--)
+           for(i=finePath.l-1; i>=0; i--)
            {
-              px = deg2px(pt.getDeg(i));
+              px = mainMap.deg2px(finePath.getDeg(i), tileWidth, tileHeight);
               dc.drawLine(lx+tx[2],ly+ty[2],px[0]+tx[2],px[1]+ty[2]);
               lx=px[0];
               ly=px[1];
@@ -517,9 +508,9 @@ class EveryTileView extends Ui.DataField {
            // coarse grained path
            fgbgCol(dc,Gfx.COLOR_DK_GRAY,Gfx.COLOR_DK_GRAY);
 
-           for(i=cpt.l; i>=0; i--)
+           for(i=coarsePath.l; i>=0; i--)
            {
-              px = deg2px(cpt.getDeg(i));
+              px = mainMap.deg2px(coarsePath.getDeg(i), tileWidth, tileHeight);
               dc.drawLine(lx+tx[2],ly+ty[2],px[0]+tx[2],px[1]+ty[2]);
               lx=px[0];
               ly=px[1];
@@ -527,8 +518,8 @@ class EveryTileView extends Ui.DataField {
            dc.setPenWidth(1);
          }else
          {
-            dc.setClip(0,0,dx,dy);
-            dc.drawText(dx/2,5,Gfx.FONT_MEDIUM,Ui.loadResource(Rez.Strings.wholeDisp),Gfx.TEXT_JUSTIFY_CENTER);
+            dc.setClip(0,0,displaySizeX,displaySizeY);
+            dc.drawText(displaySizeX/2,5,Gfx.FONT_MEDIUM,Ui.loadResource(Rez.Strings.wholeDisp),Gfx.TEXT_JUSTIFY_CENTER);
          }
 
     }

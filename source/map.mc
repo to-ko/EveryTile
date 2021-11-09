@@ -15,6 +15,9 @@
 using Toybox.Application.Storage;
 using Toybox.Application.Properties;
 
+const degreeInRadian = 0.0174532925199433;
+const PI = 3.14159265359;
+
 class map{
    var bigMap; // compressed map of tiles. 124 rows x 124 columns.
                // Each value stores 31 bits, 1=visited, 0=unvisited tile
@@ -32,17 +35,34 @@ class map{
    var newTiles = 0;  // tiles visited for the first time
    var newTilesR = 0; // tiles visited for the first time this ride
 
+   var zoom = 14; //squares
+   //var zoom = 17; //Squadratinhos 2 4 8 - 8x8
 
-   function lat2lati(lat)
+   var totalTiles = 1 << zoom;
+
+   var lonToTileXFactor =  totalTiles/360.0d;
+   var latToTileYFactor1 = totalTiles/2.0d;
+   var latToTileYFactor2 = totalTiles/(2.0d*PI);
+
+
+   function latToTileY(lat)
    {
-      return (8192.0 - Math.ln(Math.tan(lat*0.0174532925199433) + (1.0 / Math.cos(lat*0.0174532925199433))) * 2607.59458761762).toNumber();
+        // where zoom is 14
+       //my $lata = $lat*pi/180;
+       //return int( (1 - log(tan($lata) + sec($lata))/pi)/2 * 2**$zoom );
+      //return (8192.0 - Math.ln(Math.tan(lat*degreeInRadian) + (1.0 / Math.cos(lat*degreeInRadian))) * 2607.59458761762).toNumber();
+      return (latToTileYFactor1 - Math.ln(Math.tan(lat*degreeInRadian) + (1.0 / Math.cos(lat*degreeInRadian))) * latToTileYFactor2).toNumber();
    }
 
 
 
-   function lon2loni(lon)
+   function lonToTileX(lon)
    {
-      return ((lon + 180.0) * 45.5111111111111).toNumber();
+      //return int( ($lon+180)/360 * 2**$zoom );
+      //return ((lon + 180.0) * 45.5111111111111).toNumber();
+      //System.println(lonToTileXFactor);
+      //System.println(totalTiles);
+      return ((lon + 180.0) * lonToTileXFactor).toNumber();
    }
 
    function bigmap2lmap(xi,yi)
@@ -66,6 +86,26 @@ class map{
     }
 
 
+    function deg2px(dgr, tileWidth, tileHeight)
+    {
+       var px = [0, 0];
+       px[0] = Math.floor((((dgr[1] + 180.0) * lonToTileXFactor)- loni ) * tileWidth).toNumber();
+       //0.318309886183791 = 1/PI
+       px[1] = Math.floor(((1.0 - Math.ln(Math.tan(dgr[0]*degreeInRadian) + (1.0 / Math.cos(dgr[0]*degreeInRadian))) * 0.318309886183791) * latToTileYFactor1 - lati) * tileHeight).toNumber();
+       return px;
+    }
+
+
+
+    // degreeInRadian - is 1 degree in radians
+    function isDistanceBiggerThanPixel(point1, point2, tileWidth, tileHeight) {
+       return  (   ((point1[1]-point2[1]) * lonToTileXFactor * tileWidth ).abs().toNumber()>1 ) ||
+             (   ( (- Math.ln(Math.tan(point1[0]*degreeInRadian) + (1.0 / Math.cos(point1[0]*degreeInRadian)))
+                    + Math.ln(Math.tan(point2[0]*degreeInRadian) + (1.0 / Math.cos(point2[0]*degreeInRadian))) ) * 0.318309886183791 * latToTileYFactor1 * tileHeight
+                 ).abs().toNumber()>1);
+    }
+
+
 
     function setBigMap(xi,yi)
     {
@@ -80,8 +120,8 @@ class map{
 
    function setMap(lon,lat)
    {
-      var xi = lon2loni(lon);
-      var yi = lat2lati(lat);
+      var xi = lonToTileX(lon);
+      var yi = latToTileY(lat);
       clon = lon;
       clat = lat;
 
@@ -105,8 +145,8 @@ class map{
       var ly;
       for (i=0;i<clp;i++)
       {
-         lx = lon2loni(cpath[2*i])   - loni + 2;
-         ly = lat2lati(cpath[2*i+1]) - lati + 2;
+         lx = lonToTileX(cpath[2*i])   - loni + 2;
+         ly = latToTileY(cpath[2*i+1]) - lati + 2;
          if( (lx>=0) && (lx<5) && (ly>=0) && (ly<5))
          {
             ltiles[lx+ly*5]=2;
@@ -216,8 +256,8 @@ class map{
           Storage.setValue("bigMap",bigMap);
        }
 
-       hlati = lat2lati(hlat);
-       hloni = lon2loni(hlon);
+       hlati = latToTileY(hlat);
+       hloni = lonToTileX(hlon);
        clat = hlat;
        clon = hlon;
        loni=hloni;
